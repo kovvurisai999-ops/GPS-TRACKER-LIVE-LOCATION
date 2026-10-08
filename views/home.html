@@ -487,8 +487,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/socket.io@4.8.1/client-dist/socket.io.min.js"></script>
     <script>
-        const baseUrl = "{{ remoteURL }}";
+        let baseUrl = (window.location.origin && !window.location.origin.includes("localhost") && !window.location.origin.includes("127.0.0.1"))
+            ? window.location.origin
+            : ("{{ remoteURL }}" || window.location.origin);
         let currentTargets = JSON.parse('{{ targetsJson }}');
+
 
         const socket = io("", {
             secure: true,

@@ -194,12 +194,19 @@ router.use(checkAdminToken);
 // Admin Dashboard & Command Center Routes
 // -------------------------------------------------------------
 router.get("/", (req, res) => {
+    const host = req.get("host") || "";
+    const protocol = req.protocol === "https" || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+    const remoteURL = (host && !host.includes("localhost") && !host.includes("127.0.0.1"))
+        ? `${protocol}://${host}`
+        : (global.remoteURL || `http://localhost:${config.port}`);
+
     res.render("home", {
         appName: config.appName,
-        remoteURL: global.remoteURL || `http://localhost:${config.port}`,
+        remoteURL,
         targetsJson: JSON.stringify(getTargetsArray())
     });
 });
+
 
 router.get("/map", (req, res) => {
     const selectedId = req.query.id || "";
