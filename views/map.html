@@ -627,6 +627,35 @@
             }
         }
 
+        function pollTargets() {
+            fetch("/api/targets")
+                .then(res => res.json())
+                .then(targets => {
+                    if (Array.isArray(targets)) {
+                        let updated = false;
+                        targets.forEach(t => {
+                            if (!allTargets[t.id] || allTargets[t.id].lastSeen !== t.lastSeen) {
+                                allTargets[t.id] = t;
+                                updated = true;
+                            }
+                        });
+                        if (updated || Object.keys(allTargets).length !== targets.length) {
+                            updateTargetDropdown();
+                            if (activeTargetId && allTargets[activeTargetId] && !isTrackingPaused) {
+                                focusTarget(allTargets[activeTargetId]);
+                            } else if (!activeTargetId && targets.length > 0) {
+                                switchTarget(targets[0].id);
+                            }
+                        }
+                    }
+                })
+                .catch(() => { });
+        }
+
+        // Run polling every 2 seconds for Vercel serverless environment support
+        setInterval(pollTargets, 2000);
+        pollTargets();
+
         // WebSockets Client
         const socket = io("", {
             secure: true,
