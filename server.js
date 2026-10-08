@@ -85,3 +85,6 @@ server.listen(PORT, async () => {
     }
     console.log(`==================================================\n`);
 });
+
+module.exports = app;
+
