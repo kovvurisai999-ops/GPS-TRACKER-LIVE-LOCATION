@@ -1,0 +1,25 @@
+{
+  "name": "live-location-tracker",
+  "version": "2.0.0",
+  "description": "Real-time GPS Live Location Tracker for Seminars, Education & Ethical Hacking Demonstrations",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "location-tracker",
+    "gps",
+    "socket.io",
+    "ethical-hacking",
+    "realtime-map",
+    "leaflet"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "express": "^4.21.1",
+    "socket.io": "^4.8.1"
+  }
+}

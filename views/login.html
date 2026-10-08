@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - {{ appName }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        body {
+            background: #090d16;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(0, 242, 254, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(79, 172, 254, 0.12) 0%, transparent 40%),
+                linear-gradient(135deg, #050811 0%, #0d1527 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: #e2e8f0;
+        }
+
+        /* Cyber grid overlay */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            pointer-events: none;
+        }
+
+        .login-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.2), inset 0 0 15px rgba(0, 242, 254, 0.05);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .brand-icon {
+            font-size: 42px;
+            color: #00f2fe;
+            margin-bottom: 12px;
+            text-shadow: 0 0 15px rgba(0, 242, 254, 0.8);
+        }
+
+        .login-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            letter-spacing: 2px;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+
+        .login-header p {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-top: 6px;
+        }
+
+        .field {
+            margin-bottom: 22px;
+            position: relative;
+        }
+
+        .field label {
+            display: block;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #38bdf8;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 14px 14px 44px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #00f2fe;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+        }
+
+        .input-group input:focus + i {
+            color: #00f2fe;
+        }
+
+        .error-alert {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            border: none;
+            border-radius: 8px;
+            color: #050811;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            font-size: 15px;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.7);
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 13px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="login-header">
+            <div class="brand-icon">
+                <i class="fa-solid fa-satellite-dish"></i>
+            </div>
+            <h1>GPS Tracker HUD</h1>
+            <p>Ethical Hacking & Seminar Demonstration Platform</p>
+        </div>
+
+        {{ error ? '<div class="error-alert"><i class="fa-solid fa-triangle-exclamation"></i> ' + error + '</div>' : '' }}
+
+        <form action="/login" method="POST">
+            <div class="field">
+                <label>Admin Username</label>
+                <div class="input-group">
+                    <input type="text" name="username" placeholder="Enter username" required autocomplete="off" value="admin">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Access Key / Password</label>
+                <div class="input-group">
+                    <input type="password" name="password" placeholder="Enter password" required autocomplete="off" value="adminpassword">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <span>AUTHENTICATE</span>
+                <i class="fa-solid fa-arrow-right-to-bracket"></i>
+            </button>
+        </form>
+
+        <div class="footer-note">
+            <i class="fa-solid fa-shield-halved"></i> Real-Time Telemetry & Location Intelligence
+        </div>
+    </div>
+</body>
+</html>

